@@ -1,74 +1,27 @@
-const mysql = require('mysql');
-const mysqlConfig = require('./config.js');
-const Blue = require('bluebird');
+var pg = require('pg');
+var format = require('pg-format');
+const pool = new pg.Pool({
+  user: 'root',
+  host: '127.0.0.1',
+  database: 'comments',
+  password: '0000',
+  port: '3003'
+});
 
-const connection = mysql.createConnection(mysqlConfig);
+pool.query(
+  'CREATE TABLE comments(idParentComment SERIAL PRIMARY KEY, textContent VARCHAR(120) NOT NULL, user VARCHAR(40) NOT NULL) ',
+  (err, res) => {
+    console.log(err, res);
+    pool.end();
+  }
+);
 
-
-
-
-const AddMany = function(commentsArr,callback) {
+const AddMany = function(commentsArr, callback) {
   // console.log("AddComment values Obj: ", valuesObj);
-  var promiseArray = commentsArr.map((data,i) => {
-  	return new Blue( (resolve,reject) => {
-  		connection.query(
-		    "INSERT INTO Comments (textContent, dateCreated,user,idParentComment) VALUES ('"+data.textContent+"', '"+data.dateCreated.toString()+"', '"+data.user+"', '"+data.idParentComment+"')",
-		    function (err, result, fields) {
-		      if (err) {callback(err)}
-		      else {
-		      	console.log('insert#: ',i);
-		      	callback(null,result)
-		      }
-		    })
-  	})
-		  
-
-
-	})
-	Blue.all(promiseArray).then(result =>{
-		connection.commit();
-		//connect.end(); // connection.end()?
-		}
-	);
-}
-
-const GetAllComments = function(callback) {
-  return connection.query("SELECT * FROM Comments;",function (err, result, fields) {
-    if (err) {
-    	callback(err)
-    }
-    else {
-    	callback(null,result)
-    }
-  })
 };
-
-const AddOne = function(comment,callback) {
-	return connection.query(
-		"INSERT INTO Comments (textContent, dateCreated,user,idParentComment) VALUES ('"+comment.textContent+"', '"+comment.dateCreated.toString()+"', '"+comment.user+"', '"+comment.idParentComment+"')",
-		function (err,result,fields) {
-			if (err) {console.log('DB.AddOne error callback: ');callback(err);}
-			else {callback(null,result)}
-		}
-	)
-}
-
-
-const GetOneComment = function(commentId,callback) {
-	return connection.query("SELECT * FROM Comments WHERE id="+commentId+";",function (err, result, fields) {
-    if (err) {
-    	callback(err)
-    }
-    else {
-    	callback(null,result)
-    }
-  })
-}
-
-
 module.exports = {
-	AddMany,
-	GetAllComments,
-	AddOne,
-	GetOneComment
+  AddMany
+  // GetAllComments,
+  // AddOne,
+  // GetOneComment
 };
