@@ -3,107 +3,78 @@ import ReactDOM from "react-dom";
 import axios from "axios";
 import ParentComment from "./ParentComment.jsx";
 import InputComment from "./InputComment.jsx";
+import style from "./styles/styles.js";
 const currentDate = new Date();
-let targetID = window.location.pathname.slice(1, window.location.pathname.length - 1);
+let targetID = window.location.pathname.slice(
+  1,
+  window.location.pathname.length - 1
+);
 
-const styles = {
-  app: {
-    paddingTop: 40,
-    textAlign: "center",
-    border: "1px solid rgba(121, 124, 127, .2)",
-    borderRadius: "5px",
-    marginLeft: "15px",
-    maxWidth: "55%",
-    minWidth: "40%"
-  },
-  parentComment: {
-    display: "flex",
-    flexDirection: "column",
-    borderRadius: "25px",
-    minHeight: "40px",
-    padding: "6px",
-    color: "#797c7f",
-    marginBottom: "6px"
-  },
-  dateSpan: {
-    display: "flex",
-    flexDirection: "row",
-    justifySelf: "flex-end",
-    alignSelf: "flex-end",
-    fontSize: "14px"
-  },
-  userSpan: {
-    alignSelf: "flex-start",
-    justifySelf: "flex-start",
-    fontSize: "14px"
-  },
-  userDateDiv: {
-    display: "flex",
-    justifyContent: "space-between",
-    flexDirection: "row"
-  },
-  textContentSpan: {
-    color: "black",
-    fontSize: "16px",
-    display: "flex",
-    alignContent: "flex-start",
-    paddingLeft: "4px"
+const styles = style.index;
+const defaultComment = [
+  {
+    songId: targetID,
+    genre: null,
+    textContent: "Be the first to comment on this song!",
+    dateCreated: " :) ",
+    user: "blank"
   }
-};
+];
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      comments: [{ dateCreated: '15', user: "shaggy", textContent: "nope" }]
+      comments: []
     };
     this.handleNewComment = this.handleNewComment.bind(this);
+    this.commentDiv = this.commentDiv.bind(this);
   }
   componentDidMount() {
     axios
       .get(`/api/comments/${targetID}`)
       .then(response => {
-        this.setState({ comments: response.data})
-        
+        this.setState({ comments: response.data });
       })
       .catch(err => {
         console.log(err);
       });
   }
-
   handleNewComment(newComment) {
+    console.log("New comment Before Concat", newComment);
     this.setState({
       comments: this.state.comments
-        .reverse()
         .concat(newComment)
-        .reverse()
+        .sort((a, b) => b.id - a.id)
+    });
+    console.log("State after concat", this.state.comments);
+  }
+  commentDiv(comments) {
+    return comments.map((comment, i) => {
+      let calendarDay = comment.dateCreated.substring(0, 10);
+      let timeOfDay = comment.dateCreated.substring(11, 16);
+      return (
+        <ParentComment style={styles.parentComment} key={`comment#${i}`}>
+          <div style={styles.userDateDiv}>
+            <span>{comment.username}</span>
+            <span style={styles.dateSpan}>{`${calendarDay} ${timeOfDay}`}</span>
+          </div>
+          <div style={styles.textContentSpan}>{comment.textContent}</div>
+        </ParentComment>
+      );
     });
   }
-
   render() {
-    console.log('TargetId', targetID)
     return (
       <div style={styles.app} id="app">
-        <InputComment addNewComment={this.handleNewComment} />
-
-        {this.state.comments.map((comment, i) => {
-          let date = comment.dateCreated;
-          let calendarDay = date.substring(0, 10);
-          let timeOfDay = date.substring(11, 16);
-          return (
-
-            <ParentComment style={styles.parentComment} key={`comment#${i}`}>
-              <div style={styles.userDateDiv}>
-                <span>{comment.username}:</span>
-                <span
-                  style={styles.dateSpan}
-                >{`${calendarDay}: ${timeOfDay}`}</span>
-              </div>
-
-              <div style={styles.textContentSpan}>{comment.textContent}</div>
-            </ParentComment>
-          );
-        })}
+        <InputComment
+          addNewComment={this.handleNewComment}
+          songId={targetID}
+          handleNewComment={this.handleNewComment}
+        />
+        {this.state.comments.length > 0
+          ? this.commentDiv(this.state.comments)
+          : this.commentDiv(defaultComment)}
       </div>
     );
   }
