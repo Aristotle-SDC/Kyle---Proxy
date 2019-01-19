@@ -7,18 +7,26 @@ class ParentComment extends Component {
     super(props);
     this.state = {
       hover: false,
-      replyButton: styles.invisibleReplyButton
+      replyButton: styles.invisibleReplyButton,
+      deleteButton: styles.invisibleDeleteButton
     };
   }
 
   mouseOver() {
-    this.setState({ replyButton: styles.visibleReplyButton });
+    this.setState({
+      replyButton: styles.visibleReplyButton,
+      deleteButton: styles.visibleDeletButton
+    });
   }
 
   mouseOut() {
-    this.setState({ replyButton: styles.invisibleReplyButton });
+    this.setState({
+      replyButton: styles.invisibleReplyButton,
+      deleteButton: styles.invisibleDeleteButton
+    });
   }
   render() {
+    console.log(this.props.children);
     return (
       <div
         style={styles.parentComment}
@@ -26,6 +34,7 @@ class ParentComment extends Component {
         onMouseOut={() => this.mouseOut()}
       >
         {this.props.children}
+        <span style={this.state.deleteButton}>Delete</span>
         <span style={this.state.replyButton}>Reply</span>
       </div>
     );

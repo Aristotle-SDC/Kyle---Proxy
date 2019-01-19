@@ -29,9 +29,7 @@ class InputComment extends Component {
     axios
       .post("/api/comments/:id", {
         songId: this.props.songId,
-        // genre: this.props.comment.genre,
         textContent: this.state.commentText,
-
         dateCreated: new Date()
           .toISOString()
           .slice(0, 19)

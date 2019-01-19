@@ -1,3 +1,4 @@
+const nr = require("newrelic");
 const cn = {
   host: "localhost",
   port: 5432,
