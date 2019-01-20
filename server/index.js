@@ -30,11 +30,18 @@ app.get("/api/comments/:id", (req, res) => {
 //       res.send(comment);
 //     }
 //   });
-// });
+// }); "/api/comments/remove/:id"
 
 app.post("/api/comments/:id", (request, response) => {
   // console.log("post", req.body);
   db.AddOne(request.body)
+    .then(res => response.send(res))
+    .catch(error => console.log(error));
+});
+
+app.post("/api/comments/remove/:id", (request, response) => {
+  console.log("DELEEEETE", request.body);
+  db.deleteComment(request.body)
     .then(res => response.send(res))
     .catch(error => console.log(error));
 });

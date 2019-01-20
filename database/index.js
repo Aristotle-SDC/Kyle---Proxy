@@ -25,7 +25,7 @@ postgres
   });
 let genre = "comments";
 const GetAllCommentsForId = function(songId) {
-  console.log("Get All:");
+  // console.log("Get All:");
   if (songId <= 10000000) genre = "country";
   if (songId <= 9000000) genre = "rap";
   if (songId <= 8000000) genre = "pop";
@@ -37,11 +37,12 @@ const GetAllCommentsForId = function(songId) {
   if (songId <= 2000000) genre = "metal";
   if (songId <= 1000000) genre = "classical";
   return postgres.query(`SELECT * FROM ${genre} WHERE "songId" = ${songId} ;`);
+  postgres.end();
 };
 
 const AddOne = function(comment) {
-  console.log(comment);
-  console.log("AddOne Called:");
+  // console.log(comment);
+  // console.log("AddOne Called:");
   return postgres.query(
     `INSERT INTO ${genre} ("songId", "genre", "textContent", "dateCreated", "username") VALUES(${
       comment.songId
@@ -49,9 +50,22 @@ const AddOne = function(comment) {
       comment.user
     }') RETURNING *;`
   );
+  postgres.end();
+};
+
+const deleteComment = function(comment) {
+  console.log("Deleting comment with ID:", comment.id);
+  return postgres
+    .query(
+      `DELETE FROM ${genre}
+WHERE id ='${comment.id}';`
+    )
+    .then(count => console.log("entry deleted from database"));
+  postgres.end();
 };
 
 module.exports = {
   GetAllCommentsForId,
+  deleteComment,
   AddOne
 };
