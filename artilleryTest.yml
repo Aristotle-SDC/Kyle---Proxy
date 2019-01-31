@@ -9,4 +9,4 @@ config:
 scenarios:
   - flow:
       - get:
-          url: "/10000000/"
+          url: "/api/comments/10000000/"

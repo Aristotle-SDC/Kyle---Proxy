@@ -1,3 +1,4 @@
+const nr = require("newrelic");
 const express = require("express");
 var fs = require("fs");
 const bodyParser = require("body-parser");
@@ -21,17 +22,6 @@ app.get("/api/comments/:id", (req, res) => {
     .catch(error => console.log(error));
 });
 
-// app.get("/api/singleComment", (req, res) => {
-//   console.log("comment id: ", req.query);
-//   db.GetOneComment(req.query.commentId, (err, comment) => {
-//     if (err) {
-//       throw err;
-//     } else {
-//       res.send(comment);
-//     }
-//   });
-// }); "/api/comments/remove/:id"
-
 app.post("/api/comments/:id", (request, response) => {
   // console.log("post", req.body);
   db.AddOne(request.body)
@@ -42,7 +32,7 @@ app.post("/api/comments/:id", (request, response) => {
 app.post("/api/comments/remove/:id", (request, response) => {
   console.log("DELEEEETE", request.body);
   db.deleteComment(request.body)
-    .then(res => response.send(res))
+    .then(response => response)
     .catch(error => console.log(error));
 });
 
