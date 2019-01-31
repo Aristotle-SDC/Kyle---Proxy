@@ -1,74 +1,71 @@
-const mysql = require('mysql');
-const mysqlConfig = require('./config.js');
-const Blue = require('bluebird');
-
-const connection = mysql.createConnection(mysqlConfig);
-
-
-
-
-const AddMany = function(commentsArr,callback) {
-  // console.log("AddComment values Obj: ", valuesObj);
-  var promiseArray = commentsArr.map((data,i) => {
-  	return new Blue( (resolve,reject) => {
-  		connection.query(
-		    "INSERT INTO Comments (textContent, dateCreated,user,idParentComment) VALUES ('"+data.textContent+"', '"+data.dateCreated.toString()+"', '"+data.user+"', '"+data.idParentComment+"')",
-		    function (err, result, fields) {
-		      if (err) {callback(err)}
-		      else {
-		      	console.log('insert#: ',i);
-		      	callback(null,result)
-		      }
-		    })
-  	})
-		  
-
-
-	})
-	Blue.all(promiseArray).then(result =>{
-		connection.commit();
-		//connect.end(); // connection.end()?
-		}
-	);
-}
-
-const GetAllComments = function(callback) {
-  return connection.query("SELECT * FROM Comments;",function (err, result, fields) {
-    if (err) {
-    	callback(err)
-    }
-    else {
-    	callback(null,result)
-    }
-  })
+const nr = require("newrelic");
+const cn = {
+  host: "localhost",
+  port: 5432,
+  database: "commentsSection",
+  user: "root",
+  password: "0000"
 };
 
-const AddOne = function(comment,callback) {
-	return connection.query(
-		"INSERT INTO Comments (textContent, dateCreated,user,idParentComment) VALUES ('"+comment.textContent+"', '"+comment.dateCreated.toString()+"', '"+comment.user+"', '"+comment.idParentComment+"')",
-		function (err,result,fields) {
-			if (err) {console.log('DB.AddOne error callback: ');callback(err);}
-			else {callback(null,result)}
-		}
-	)
-}
+const pgp = require("pg-promise")();
+var postgres = pgp(cn);
 
-
-const GetOneComment = function(commentId,callback) {
-	return connection.query("SELECT * FROM Comments WHERE id="+commentId+";",function (err, result, fields) {
-    if (err) {
-    	callback(err)
-    }
-    else {
-    	callback(null,result)
-    }
+postgres
+  .proc("version")
+  .then(data => {
+    console.log(
+      `Connected to ${data.version
+        .split(" ")
+        .slice(0, 4)
+        .join(" ")}`
+    );
   })
-}
+  .catch(error => {
+    console.log("Failed to connect to PostgreSQL");
+  });
+let genre = "comments";
+const GetAllCommentsForId = function(songId) {
+  // console.log("Get All:");
+  if (songId <= 10000000) genre = "country";
+  if (songId <= 9000000) genre = "rap";
+  if (songId <= 8000000) genre = "pop";
+  if (songId <= 7000000) genre = "rock";
+  if (songId <= 6000000) genre = "jazz";
+  if (songId <= 5000000) genre = "funk";
+  if (songId <= 4000000) genre = "blues";
+  if (songId <= 3000000) genre = "80's";
+  if (songId <= 2000000) genre = "metal";
+  if (songId <= 1000000) genre = "classical";
+  return postgres.query(`SELECT * FROM ${genre} WHERE "songId" = ${songId} ;`);
+  postgres.end();
+};
 
+const AddOne = function(comment) {
+  // console.log(comment);
+  // console.log("AddOne Called:");
+  return postgres.query(
+    `INSERT INTO ${genre} ("songId", "genre", "textContent", "dateCreated", "username") VALUES(${
+      comment.songId
+    }, '${genre}', '${comment.textContent}', '${comment.dateCreated}', '${
+      comment.user
+    }') RETURNING *;`
+  );
+  postgres.end();
+};
+
+const deleteComment = function(comment) {
+  console.log("Deleting comment with ID:", comment.id);
+  return postgres
+    .query(
+      `DELETE FROM ${genre}
+WHERE id ='${comment.id}';`
+    )
+    .then(count => console.log("entry deleted from database"));
+  postgres.end();
+};
 
 module.exports = {
-	AddMany,
-	GetAllComments,
-	AddOne,
-	GetOneComment
+  GetAllCommentsForId,
+  deleteComment,
+  AddOne
 };
